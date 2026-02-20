@@ -1,26 +1,311 @@
 @import "tailwindcss";
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f0fdfa;
+  --foreground: #134e4a;
+  --primary: #0d9488;
+  --primary-foreground: #f0fdfa;
+  --muted: #ccfbf1;
+  --muted-foreground: #0f766e;
+  --card: #ffffff;
+  --card-foreground: #134e4a;
+  --border: #99f6e4;
+  --input: #99f6e4;
+  --ring: #0d9488;
+  --destructive: #dc2626;
+  --destructive-foreground: #fef2f2;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #042f2e;
+    --foreground: #f0fdfa;
+    --primary: #5eead4;
+    --primary-foreground: #042f2e;
+    --muted: #134e4a;
+    --muted-foreground: #99f6e4;
+    --card: #0f766e;
+    --card-foreground: #f0fdfa;
+    --border: #0d9488;
+    --input: #134e4a;
+    --ring: #5eead4;
+    --destructive: #f87171;
+    --destructive-foreground: #fef2f2;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes backdrop-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes fade-in {
+    from,
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes slide-up {
+    from,
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes slide-down {
+    from,
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes scale-in {
+    from,
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes backdrop-fade {
+    from,
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes slide-in-right {
+    from,
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+.animate-in {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-in-fade {
+  animation: fade-in 0.35s ease-out forwards;
+}
+
+.animate-in-scale {
+  animation: scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop {
+  animation: backdrop-fade 0.25s ease-out forwards;
+}
+
+.stagger-children > * {
+  opacity: 0;
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.stagger-children > *:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.stagger-children > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.stagger-children > *:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.stagger-children > *:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.stagger-children > *:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.stagger-children > *:nth-child(6) {
+  animation-delay: 0.3s;
+}
+.stagger-children > *:nth-child(7) {
+  animation-delay: 0.35s;
+}
+.stagger-children > *:nth-child(8) {
+  animation-delay: 0.4s;
+}
+.stagger-children > *:nth-child(9) {
+  animation-delay: 0.45s;
+}
+.stagger-children > *:nth-child(n + 10) {
+  animation-delay: 0.5s;
+}
+
+.animate-header-in {
+  animation: slide-down 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.25s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in,
+  .animate-in-fade,
+  .animate-in-scale,
+  .animate-backdrop,
+  .animate-header-in,
+  .animate-slide-in-right {
+    animation: none;
+    opacity: 1;
+  }
+  .stagger-children > * {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.nested-depth-0 {
+  --nest-depth: 0;
+}
+.nested-depth-1 {
+  --nest-depth: 1;
+}
+.nested-depth-2 {
+  --nest-depth: 2;
+}
+.nested-depth-3 {
+  --nest-depth: 3;
+}
+.nested-depth-4 {
+  --nest-depth: 4;
+}
+
+.nested-card {
+  margin-left: calc(var(--nest-depth, 0) * 20px);
+  border-left-width: 3px;
+  border-left-color: color-mix(in oklch, var(--primary) 30%, transparent);
+  background: color-mix(
+    in oklch,
+    var(--card) 100%,
+    var(--muted) calc(var(--nest-depth, 0) * 8%)
+  );
+  box-shadow: calc(var(--nest-depth, 0) * 1px) calc(var(--nest-depth, 0) * 2px)
+    6px color-mix(in oklch, var(--foreground) 6%, transparent);
+  transition:
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.nested-card:hover {
+  box-shadow:
+    calc(var(--nest-depth, 0) * 1px) calc(var(--nest-depth, 0) * 2px) 8px
+      color-mix(in oklch, var(--foreground) 8%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--primary) 15%, transparent);
 }
