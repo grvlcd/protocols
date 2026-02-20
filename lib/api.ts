@@ -45,6 +45,8 @@ export interface ThreadSummary {
   comments_count?: number;
   votes_sum?: number;
   user_vote?: number | null;
+  upvoted_by_user_ids?: number[];
+  downvoted_by_user_ids?: number[];
   author?: {
     id: number;
     name: string;
@@ -64,6 +66,10 @@ export interface Comment {
   children?: Comment[];
   votes_sum?: number;
   user_vote?: number | null;
+  /** User IDs who upvoted (value=1). Used to show "already voted" after refresh. */
+  upvoted_by_user_ids?: number[];
+  /** User IDs who downvoted (value=-1). */
+  downvoted_by_user_ids?: number[];
   author?: {
     id: number;
     name: string;
@@ -82,6 +88,23 @@ export interface Review {
     id: number;
     name: string;
   };
+}
+
+/**
+ * Resolve current user's vote from user_vote or from upvoted/downvoted user ID lists.
+ * Ensures "already voted" shows correctly after refresh when API returns vote collections.
+ */
+export function resolveUserVote(
+  userVote: number | null | undefined,
+  upvotedByUserIds: number[] | undefined,
+  downvotedByUserIds: number[] | undefined,
+  currentUserId: number | undefined,
+): number | null {
+  if (userVote !== undefined && userVote !== null) return userVote;
+  if (currentUserId === undefined) return null;
+  if (upvotedByUserIds?.includes(currentUserId)) return 1;
+  if (downvotedByUserIds?.includes(currentUserId)) return -1;
+  return null;
 }
 
 import { getToken } from "@/lib/auth";

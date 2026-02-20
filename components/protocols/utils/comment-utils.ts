@@ -87,6 +87,37 @@ export function updateCommentUserVote(
   });
 }
 
+export function updateCommentVoteFromResponse(
+  existing: Comment[],
+  id: number,
+  userVote: number | null,
+  votesSum: number,
+): Comment[] {
+  return existing.map((item) => {
+    if (item.id === id) {
+      return {
+        ...item,
+        user_vote: userVote,
+        votes_sum: votesSum,
+      };
+    }
+
+    if (item.children) {
+      return {
+        ...item,
+        children: updateCommentVoteFromResponse(
+          item.children,
+          id,
+          userVote,
+          votesSum,
+        ),
+      };
+    }
+
+    return item;
+  });
+}
+
 export function updateCommentVoteState(
   existing: Comment[],
   id: number,

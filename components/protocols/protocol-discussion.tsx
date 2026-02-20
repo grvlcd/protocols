@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { Comment, ProtocolDetail, ThreadSummary } from "@/lib/api";
 import { postJson, deleteThread, deleteComment } from "@/lib/api";
 import { useAuth } from "@/components/auth/auth-provider";
+import { getProtocol, getThreadComments, groupCommentsByParent } from "@/lib/protocols";
 import { NewThreadForm } from "./new-thread-form";
 import { ThreadCard } from "./thread-card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -12,8 +13,8 @@ import {
   replaceComment,
   removeComment,
   findComment,
-  updateCommentUserVote,
   updateCommentVoteState,
+  updateCommentVoteFromResponse,
   revertCommentVote,
 } from "./utils/comment-utils";
 
@@ -48,6 +49,39 @@ export function ProtocolDiscussion({
     threadId: number | null;
     commentId: number | null;
   }>({ open: false, threadId: null, commentId: null });
+  const userHasVotedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isAuthenticated || !protocol?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const protocolWithVotes = await getProtocol(String(protocol.id));
+        if (cancelled || !protocolWithVotes?.threads) return;
+        if (userHasVotedRef.current) return;
+        const threadComments = await Promise.all(
+          protocolWithVotes.threads.map(async (thread) => ({
+            threadId: thread.id,
+            comments: groupCommentsByParent(await getThreadComments(thread.id)),
+          })),
+        );
+        if (cancelled || userHasVotedRef.current) return;
+        const next: ThreadWithComments[] = protocolWithVotes.threads.map(
+          (thread) => ({
+            thread,
+            comments:
+              threadComments.find((e) => e.threadId === thread.id)?.comments ??
+              [],
+          }),
+        );
+        setThreads(next);
+      } catch {
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, protocol?.id]);
 
   async function handleCreateThread(formData: FormData) {
     const title = (formData.get("title") as string)?.trim();
@@ -195,10 +229,21 @@ export function ProtocolDiscussion({
     );
 
     try {
-      const response = await postJson<{ value: number | null }>(
-        `/threads/${threadId}/vote`,
-        { value },
-      );
+      const response = await postJson<{
+        value?: number | null;
+        votes_sum?: number;
+      }>(`/threads/${threadId}/vote`, { value });
+      const newUserVote =
+        response.value !== undefined ? response.value : isTogglingOff ? null : value;
+      const newVotesSum =
+        response.votes_sum !== undefined
+          ? response.votes_sum
+          : isTogglingOff
+            ? Number(currentEntry?.thread.votes_sum ?? 0) - value
+            : currentVote
+              ? Number(currentEntry?.thread.votes_sum ?? 0) - currentVote + value
+              : Number(currentEntry?.thread.votes_sum ?? 0) + value;
+      userHasVotedRef.current = true;
       setThreads((prev) =>
         prev.map((entry) =>
           entry.thread.id === threadId
@@ -206,7 +251,8 @@ export function ProtocolDiscussion({
               ...entry,
               thread: {
                 ...entry.thread,
-                user_vote: response.value,
+                user_vote: newUserVote,
+                votes_sum: newVotesSum,
               },
             }
             : entry,
@@ -264,19 +310,35 @@ export function ProtocolDiscussion({
     );
 
     try {
-      const response = await postJson<{ value: number | null }>(
-        `/comments/${commentId}/vote`,
-        { value },
-      );
+      const response = await postJson<{
+        value?: number | null;
+        votes_sum?: number;
+      }>(`/comments/${commentId}/vote`, { value });
+      const newUserVote =
+        response.value !== undefined ? response.value : isTogglingOff ? null : value;
+      const responseVotesSum = response.votes_sum;
+      userHasVotedRef.current = true;
       setThreads((prev) =>
-        prev.map((entry) => ({
-          ...entry,
-          comments: updateCommentUserVote(
-            entry.comments,
-            commentId,
-            response.value,
-          ),
-        })),
+        prev.map((entry) => {
+          const comment = findComment(entry.comments, commentId);
+          const votesSum =
+            responseVotesSum !== undefined
+              ? responseVotesSum
+              : comment
+                ? Number(comment.votes_sum ?? 0)
+                : 0;
+          return {
+            ...entry,
+            comments: comment
+              ? updateCommentVoteFromResponse(
+                  entry.comments,
+                  commentId,
+                  newUserVote,
+                  votesSum,
+                )
+              : entry.comments,
+          };
+        }),
       );
     } catch (error) {
       // eslint-disable-next-line no-console

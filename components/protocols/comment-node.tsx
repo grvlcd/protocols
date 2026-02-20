@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Comment } from "@/lib/api";
+import { resolveUserVote } from "@/lib/api";
 import { VoteButton } from "./vote-button";
 
 interface Props {
@@ -30,6 +31,12 @@ export function CommentNode({
 }: Props) {
   const indent = Math.min(depth, 3);
   const isOwner = currentUserId !== undefined && comment.user_id === currentUserId;
+  const resolvedUserVote = resolveUserVote(
+    comment.user_vote,
+    comment.upvoted_by_user_ids,
+    comment.downvoted_by_user_ids,
+    currentUserId,
+  );
 
   async function handleReply(formData: FormData) {
     const body = (formData.get("body") as string) ?? "";
@@ -80,7 +87,7 @@ export function CommentNode({
         </div>
         <VoteButton
           votes={Number(comment.votes_sum ?? 0)}
-          userVote={comment.user_vote ?? null}
+          userVote={resolvedUserVote}
           onVote={(value) => onVote(comment.id, value)}
           disabled={!isAuthenticated}
           loading={votingId === `comment-${comment.id}`}

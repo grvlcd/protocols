@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Comment, ThreadSummary } from "@/lib/api";
+import { resolveUserVote } from "@/lib/api";
 import { VoteButton } from "./vote-button";
 import { NewCommentForm } from "./new-comment-form";
 import { CommentNode } from "./comment-node";
@@ -39,6 +40,12 @@ export function ThreadCard({
   commentFormKey,
 }: Props) {
   const isOwner = currentUserId !== undefined && thread.user_id === currentUserId;
+  const resolvedUserVote = resolveUserVote(
+    thread.user_vote,
+    thread.upvoted_by_user_ids,
+    thread.downvoted_by_user_ids,
+    currentUserId,
+  );
 
   return (
     <Card className="nested-card nested-depth-0 bg-card transition-all duration-200 hover:shadow-md">
@@ -64,7 +71,7 @@ export function ThreadCard({
             )}
             <VoteButton
               votes={Number(thread.votes_sum ?? 0)}
-              userVote={thread.user_vote ?? null}
+              userVote={resolvedUserVote}
               onVote={(value) => onVoteThread(thread.id, value)}
               disabled={!isAuthenticated}
               loading={votingId === `thread-${thread.id}`}
